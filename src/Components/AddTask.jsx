@@ -1,29 +1,35 @@
+/* eslint-disable react/prop-types */
 import { useState } from "react";
 import { useTaskContext } from "./TaskContext";
 
-const AddTask = () => {
-  const { addTask } = useTaskContext();
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [tags, setTags] = useState("");
-  const [priority, setPriority] = useState("");
+const AddTask = ({ editedTask, closeModal }) => {
+  const { addTask, updateTask } = useTaskContext();
+  const [title, setTitle] = useState(editedTask ? editedTask.title || "" : "");
+  const [description, setDescription] = useState(
+    editedTask ? editedTask.description || "" : ""
+  );
+  const [tags, setTags] = useState(
+    editedTask && editedTask.tags ? editedTask.tags.join(",") : ""
+  );
+  const [priority, setPriority] = useState(
+    editedTask ? editedTask.priority || "" : ""
+  );
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    const newTask = {
-      id: Math.random().toString(36).substr(2, 9),
+    const taskData = {
       title,
       description,
       tags: tags.split(",").map((tag) => tag.trim()),
       priority,
     };
-    addTask(newTask);
-    setTitle("");
-    setDescription("");
-    setTags("");
-    setPriority("");
+    if (editedTask) {
+      updateTask(editedTask.id, taskData);
+    } else {
+      addTask(taskData);
+    }
+    closeModal();
   };
-
   return (
     <form
       onSubmit={handleSubmit}

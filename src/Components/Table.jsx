@@ -6,11 +6,41 @@ import { useTaskContext } from "./TaskContext";
 const Table = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [starredTasks, setStarredTasks] = useState([]);
+  const [taskToEdit, setTaskToEdit] = useState(null);
+  const [editedTask, setEditedTask] = useState(null);
+  const { tasks, deleteTask, deleteAllTasks } = useTaskContext();
 
-  const { tasks, deleteAllTasks } = useTaskContext();
-
+  const handleEditTask = (taskId) => {
+    // Find the task to edit by its ID
+    const task = tasks.find((task) => task.id === taskId);
+    if (task) {
+      // Set the task to edit and open the modal
+      setTaskToEdit(task);
+      openModal();
+    }
+  };
+  const handleEdit = (task) => {
+    setEditedTask(task);
+    // Optionally, you can also open the modal here to show the edit form
+  };
   const handleDeleteAll = () => {
-    deleteAllTasks();
+    const confirmDelete = window.confirm(
+      "Are you really want to delete all tasks?"
+    );
+    if (confirmDelete) {
+      deleteAllTasks();
+    }
+  };
+
+  const handleDeleteTask = (taskId) => {
+    // Show confirmation alert
+    const isConfirmed = window.confirm(
+      "Are you sure you want to delete this task?"
+    );
+    if (isConfirmed) {
+      // If confirmed, delete the task
+      deleteTask(taskId);
+    }
   };
 
   const openModal = () => {
@@ -19,6 +49,7 @@ const Table = () => {
 
   const closeModal = () => {
     setIsModalOpen(false);
+    setTaskToEdit(null);
   };
 
   const toggleStar = (taskId) => {
@@ -165,8 +196,18 @@ const Table = () => {
                       <td className='text-center'>{task.priority}</td>
                       <td>
                         <div className='flex items-center justify-center space-x-3'>
-                          <button className='text-red-500'>Delete</button>
-                          <button className='text-blue-500'>Edit</button>
+                          <button
+                            onClick={() => handleDeleteTask(task.id)}
+                            className='text-red-500'
+                          >
+                            Delete
+                          </button>
+                          <button
+                            onClick={() => handleEditTask(task.id)}
+                            className='text-blue-500'
+                          >
+                            Edit
+                          </button>
                         </div>
                       </td>
                     </tr>
