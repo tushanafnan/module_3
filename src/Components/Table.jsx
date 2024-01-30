@@ -1,3 +1,4 @@
+/* eslint-disable no-undef */
 /* eslint-disable no-unused-vars */
 import { useState } from "react";
 import AddTask from "./AddTask";
@@ -5,10 +6,20 @@ import { useTaskContext } from "./TaskContext";
 
 const Table = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [starredTasks, setStarredTasks] = useState([]);
   const [taskToEdit, setTaskToEdit] = useState(null);
-  const [editedTask, setEditedTask] = useState(null);
-  const { tasks, deleteTask, deleteAllTasks } = useTaskContext();
+  const { tasks, deleteTask, deleteAllTasks, updateTask } = useTaskContext();
+  const [searchKeyword, setSearchKeyword] = useState("");
+  const [filteredTasks, setFilteredTasks] = useState([]);
+
+  const handleSearchChange = (e) => {
+    setSearchKeyword(e.target.value);
+    const filtered = tasks.filter((task) =>
+      task.title.toLowerCase().includes(e.target.value.toLowerCase())
+    );
+    setFilteredTasks(filtered);
+  };
+
+  const tasksToDisplay = searchKeyword ? filteredTasks : tasks;
 
   const handleEditTask = (taskId) => {
     // Find the task to edit by its ID
@@ -19,10 +30,7 @@ const Table = () => {
       openModal();
     }
   };
-  const handleEdit = (task) => {
-    setEditedTask(task);
-    // Optionally, you can also open the modal here to show the edit form
-  };
+
   const handleDeleteAll = () => {
     const confirmDelete = window.confirm(
       "Are you really want to delete all tasks?"
@@ -51,19 +59,21 @@ const Table = () => {
     setIsModalOpen(false);
     setTaskToEdit(null);
   };
-
   const toggleStar = (taskId) => {
-    setStarredTasks((prevStarredTasks) => {
-      if (prevStarredTasks.includes(taskId)) {
-        return prevStarredTasks.filter((id) => id !== taskId);
-      } else {
-        return [...prevStarredTasks, taskId];
-      }
-    });
+    const taskIndex = tasks.findIndex((task) => task.id === taskId);
+    if (taskIndex !== -1) {
+      const updatedTasks = [...tasks];
+      updatedTasks[taskIndex] = {
+        ...updatedTasks[taskIndex],
+        starred: !updatedTasks[taskIndex].starred,
+      };
+      updateTask(taskId, updatedTasks[taskIndex]);
+    }
   };
 
   const isTaskStarred = (taskId) => {
-    return starredTasks.includes(taskId);
+    const task = tasks.find((task) => task.id === taskId);
+    return task && task.starred;
   };
 
   return (
@@ -81,6 +91,8 @@ const Table = () => {
                       id='search-dropdown'
                       className='z-20 block w-full bg-gray-800 px-4 py-2 pr-10 focus:outline-none'
                       placeholder='Search Task'
+                      value={searchKeyword}
+                      onChange={handleSearchChange}
                       required
                     />
                     <button
@@ -155,7 +167,7 @@ const Table = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {tasks.map((task, index) => (
+                  {tasksToDisplay.map((task, index) => (
                     <tr
                       key={task.id}
                       className='border-b border-[#2E3443] align-baseline px-4 py-2'
@@ -168,7 +180,7 @@ const Table = () => {
                           height='24'
                           viewBox='0 0 24 24'
                           strokeWidth='2'
-                          stroke={isTaskStarred(task.id) ? "yellow" : "none"}
+                          stroke={isTaskStarred(task.id) ? "yellow" : "grey"}
                           fill={isTaskStarred(task.id) ? "yellow" : "none"}
                           strokeLinecap='round'
                           strokeLinejoin='round'
